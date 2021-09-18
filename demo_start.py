@@ -1,3 +1,7 @@
+"""
+ * Copyright (C) Mathstronauts. All rights reserved.
+ * This information is confidential and proprietary to Mathstronauts and may not be used, modified, copied or distributed.
+"""
 import pygame  # pygame library for graphics
 import requests  # library to extract APIs
 import json  # library to read JSON files
