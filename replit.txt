@@ -1,0 +1,3 @@
+# IGNITE Tech Explore
+language = "python3"
+run = "python app_development/my_earth_mars_app.py"
