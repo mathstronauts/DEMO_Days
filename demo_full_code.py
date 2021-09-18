@@ -1,19 +1,12 @@
 import pygame  # pygame library for graphics
 import requests  # library to extract APIs
 import json  # library to read JSON files
-import os  # library to extract file directory
 from datetime import *
-
-import pygame_textinput  # add file to app folder
 import mathstropy
 
 # define some colours
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
-RED = (255, 0, 0)
-GREEN = (0, 255, 0)
-BLUE = (0, 0, 255)
-YELLOW = (255, 255, 0)
 
 # define Earth weather text display variables:
 weather_var = {
@@ -35,11 +28,6 @@ weather_var = {
     "show_cloud_type": ""
 }
 
-# graphics variables
-background = ""
-backgroundRect = ""
-font_col = ""
-
 # convert from epoch to standard time
 def convert_time(time):
     standard_time = datetime.fromtimestamp(time)
@@ -48,8 +36,11 @@ def convert_time(time):
 # =============================== API Data ======================================
 # API URLs
 API_KEY = "bc93af7ec21317a25fa7d755f7391e39"
-geo_URL = "http://api.openweathermap.org/geo/1.0/direct?"
 weather_URL = "https://api.openweathermap.org/data/2.5/onecall?"
+# use Toronto as an example:
+# lat = (43.7001)
+# lon = (-79.4163)
+geo_URL = "http://api.openweathermap.org/geo/1.0/direct?"
 city_name = ""
 lat = ""
 lon = ""
@@ -83,6 +74,17 @@ def getWeather():
     global city_name, lat, lon
     global background, backgroundRect, font_col
     global weather_var
+
+    # remove
+    """
+    global new_city_click
+    if new_city_click == True:
+      latlon = latloninput.get_text()
+      lat = latlon.split(", ")[0]
+      lon = latlon.split(", ")[1]
+      print(lat, " ", lon)
+      new_city_click = False
+    """
 
     update_time = datetime.now()  # get the current time
     weather_var['show_update_time'] = (f"{update_time.strftime('%I')}:" + f"{update_time.strftime('%M')}" + f" {update_time.strftime('%p')}")
@@ -135,47 +137,17 @@ def getWeather():
     weather_var['show_humidity'] = str(humidity) + " %"
     weather_var['show_pressure'] = str(pressure) + " hPa"
 
-    cloud_type = ""
+    # text in bottom left corner
     cloud_bh = "- -"
     if current_forecast != "Clear":
         cloud_bh = round(cloud_base_height(current_temp, dew_point))
-        if cloud_bh < 2000 and current_forecast == "Rain":
-            cloud_type = "cumulus"
-        elif cloud_bh < 2000:
-            cloud_type = "stratus"
-        elif 2000 <= cloud_bh < 7000:
-            cloud_type = "alto"
-        elif cloud_bh >= 7000:
-            cloud_type = "cirrus"
     else:
-        cloud_type = "None"
-
-    print("The cloud type is", cloud_type)
+        cloud_bh = "- -"
 
     weather_var['show_windspeed'] = str(wind_speed) + " km/h"
     weather_var['show_cloud_bh'] = str(cloud_bh) + " m"
-    weather_var['show_cloud_type'] = cloud_type
 
-    # Background Weather Image
-    if current_forecast == "Thunderstorm" or current_forecast == "Drizzle" or current_forecast == "Rain":
-        weather_bkgd = "bkgd_rain.png"
-        font_col = WHITE
-    elif current_forecast == "Snow":
-        weather_bkgd = "bkgd_snow.png"
-        font_col = BLACK
-    elif current_forecast == "Clear":
-        weather_bkgd = "bkgd_clear.png"
-        font_col = BLACK
-    elif current_forecast == "Clouds":
-        weather_bkgd = "bkgd_clouds.png"
-        font_col = BLACK
-    else:
-        weather_bkgd = "bkgd_clouds.png"
-        font_col = BLACK
-
-    background_file = os.path.join(img_folder, weather_bkgd)
-    background = pygame.image.load(background_file)
-    backgroundRect = background.get_rect()
+    
 
 # ======================== GRAPHICS ==========================
 # screen setup
@@ -190,33 +162,33 @@ pygame.init()
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Earth Weather App")
 
-# create file paths
-app_folder = os.path.dirname(__file__)  # gets the path of the current file
-img_folder = os.path.join(app_folder, "images")  # the join functions lets you add an image to it
-
-# Button file paths
-refresh_button_file = os.path.join(img_folder, "refresh_button.png")
-search_button_file = os.path.join(img_folder, "search_location_button.png")
-show_more_button_file = os.path.join(img_folder, "show_more_button.png")
-hide_button_file = os.path.join(img_folder, "hide_button.png")
-
-# load background images to pygame
-# everytime we add an image, need the get_rect to be able to set position dimensions on screen
-app_icon_file = os.path.join(img_folder, "weather_icon_test4.png")
-app_icon = pygame.image.load(app_icon_file)
-
 # change our app icon image!
+app_icon_file = "images/weather_icon_test4.png"
+app_icon = pygame.image.load(app_icon_file)
 pygame.display.set_icon(app_icon)
 
-# create button Rects
-search_button = pygame.image.load(search_button_file)
+# Background Weather Image
+font_col = BLACK
+background_file = "images/bkgd_beach2.png"
+background = pygame.image.load(background_file)
+backgroundRect = background.get_rect()
+
+# Load Button Images and Rect Positions
+search_button = pygame.image.load("images/search_location_button.png")
 search_buttonRect = search_button.get_rect(topleft=(360,10))
-refresh_button = pygame.image.load(refresh_button_file)
+refresh_button = pygame.image.load("images/refresh_button.png")
 refresh_buttonRect = refresh_button.get_rect(topleft=(500,10))
-show_more_button = pygame.image.load(show_more_button_file)
+show_more_button = pygame.image.load("images/show_more_button.png")
 show_more_buttonRect = show_more_button.get_rect(topleft=(600, 125))
-hide_button = pygame.image.load(hide_button_file)
+hide_button = pygame.image.load("images/hide_button.png")
 hide_buttonRect = hide_button.get_rect(topleft=(565,130))
+
+# Load Icon Images
+sunrise_i = pygame.image.load("images/sunrise_icon.png")
+sunset_i = pygame.image.load("images/sunset_icon.png")
+UVI_i = pygame.image.load("images/UVI_icon.png")
+pressure_i = pygame.image.load("images/pressure_icon.png")
+humidity_i = pygame.image.load("images/humidity_icon.png")
 
 # function to display text on screen
 def display_text(size, text, colour, x, y):
@@ -227,39 +199,45 @@ def display_text(size, text, colour, x, y):
     screen.blit(textSurf, textRect)  # show the text on the screen
 
 # display text input box
-textinput = pygame_textinput.TextInput(initial_string="Toronto", font_size=30)
+# textinput = mathstropy.TextInput(initial_string="43.7001, -79.4163", font_size=30)
+textinput = mathstropy.TextInput(initial_string="Toronto", font_size=30)
 
 def showMore():
     global weather_var
-    # Icon file paths
-    sunrise_icon_file = os.path.join(img_folder, "sunrise_icon.png")
-    sunset_icon_file = os.path.join(img_folder, "sunset_icon.png")
-    UVI_icon_file = os.path.join(img_folder, "UVI_icon.png")
-    pressure_icon_file = os.path.join(img_folder, "pressure_icon.png")
-    humidity_icon_file = os.path.join(img_folder, "humidity_icon.png")
+    # icon positions
+    ref_x = 565
+    ref_y = 180
+    icon_height = sunrise_i.get_height() + 10
+    icon_width = sunrise_i.get_width() + 10
+
+    # icon y-position
+    sunrise_y = ref_y
+    sunset_y = ref_y + icon_height
+    UVI_y = ref_y + 2*(icon_height)
+    pressure_y = ref_y + 3*(icon_height)
+    humidity_y = ref_y + 4*(icon_height)
 
     # create icon rects
-    icon_x = 565
-    icon_y = 180
-    sunrise_i = pygame.image.load(sunrise_icon_file)
-    sunrise_iRect = sunrise_i.get_rect(topleft=(icon_x, icon_y))
-    icon_h = sunrise_iRect.height
+    sunrise_iRect = sunrise_i.get_rect(topleft=(ref_x, sunrise_y))
+    sunset_iRect = sunset_i.get_rect(topleft=(ref_x, sunset_y))
+    UVI_iRect = UVI_i.get_rect(topleft=(ref_x, UVI_y))
+    pressure_iRect = pressure_i.get_rect(topleft=(ref_x, pressure_y))
+    humidity_iRect = humidity_i.get_rect(topleft=(ref_x, humidity_y))
 
-    sunset_i = pygame.image.load(sunset_icon_file)
-    sunset_iRect = sunset_i.get_rect(topleft=(icon_x, icon_y + icon_h + 10))
-    UVI_i = pygame.image.load(UVI_icon_file)
-    UVI_iRect = UVI_i.get_rect(topleft=(icon_x, icon_y + 2 * (icon_h + 10)))
-    pressure_i = pygame.image.load(pressure_icon_file)
-    pressure_iRect = pressure_i.get_rect(topleft=(icon_x, icon_y + 3 * (icon_h + 10)))
-    humidity_i = pygame.image.load(humidity_icon_file)
-    humidity_iRect = humidity_i.get_rect(topleft=(icon_x, icon_y + 4 * (icon_h + 10)))
+    # text positions
+    text_x = ref_x + icon_width
+    sunrise_text_y = sunrise_y + 5
+    sunset_text_y = sunset_y + 5
+    UVI_text_y = UVI_y + 5
+    pressure_text_y = pressure_y + 5
+    humidity_text_y = humidity_y + 5
 
     # draw weather info text
-    display_text(16, f"Sunrise: {weather_var['show_sunrise_time']}", font_col, 600, sunrise_iRect.top + 5)
-    display_text(16, f"Sunset: {weather_var['show_sunset_time']}", font_col, 600, sunset_iRect.top + 5)
-    display_text(16, f"UV Index: {weather_var['show_uvi']}", font_col, 600, UVI_iRect.top + 5)
-    display_text(16, f"Pressure: {weather_var['show_pressure']}", font_col, 600, pressure_iRect.top + 5)
-    display_text(16, f"Humidity: {weather_var['show_humidity']}", font_col, 600, humidity_iRect.top + 5)
+    display_text(16, f"Sunrise: {weather_var['show_sunrise_time']}", font_col, text_x, sunrise_text_y)
+    display_text(16, f"Sunset: {weather_var['show_sunset_time']}", font_col, text_x, sunset_text_y)
+    display_text(16, f"UV Index: {weather_var['show_uvi']}", font_col, text_x, UVI_text_y)
+    display_text(16, f"Pressure: {weather_var['show_pressure']}", font_col, text_x, pressure_text_y)
+    display_text(16, f"Humidity: {weather_var['show_humidity']}", font_col, text_x, humidity_text_y)
 
     # draw weather MORE info icons on screen
     screen.blit(sunrise_i, sunrise_iRect)
@@ -279,66 +257,61 @@ getWeather()  # Initialize weather data
 
 # ====================== APP DISPLAY LOOP =========================
 while running:
-    # regulate the speed
-    # clock.tick(FPS)
+  # process user input
+  events = pygame.event.get()
+  for event in events:
+      mouse = pygame.mouse.get_pos()  # get mouse position (x, y)
 
-    # process user input
-    events = pygame.event.get()
-    for event in events:
-        mouse = pygame.mouse.get_pos()  # get mouse position (x, y)
+      if event.type == pygame.QUIT:
+          running = False  # stop game and quite
 
-        if event.type == pygame.QUIT:
-            running = False  # stop game and quite
+      if event.type == pygame.MOUSEBUTTONDOWN:
+          print("Mouse click!")
+          if pygame.Rect.collidepoint(refresh_buttonRect, mouse):  # if refresh button overlaps with mouse position
+              print("REFRESH!")
+              getWeather()
+          elif pygame.Rect.collidepoint(search_buttonRect, mouse): # if new city button overlaps with mouse position
+              print("NEW CITY")
+              new_city_click = True
+              getLocation()
+              getWeather()
+          elif pygame.Rect.collidepoint(show_more_buttonRect, mouse): # if more button overlaps with mouse position
+              print("SHOW MORE!!!")
+              show_more_click = True
+          elif pygame.Rect.collidepoint(hide_buttonRect, mouse):
+              print("HIDE MENU")
+              show_more_click = False
 
-        if event.type == pygame.MOUSEBUTTONDOWN:
-            print("Mouse click!")
-            if pygame.Rect.collidepoint(refresh_buttonRect, mouse):  # if refresh button overlaps with mouse position
-                print("REFRESH!")
-                getWeather()
-            elif pygame.Rect.collidepoint(search_buttonRect, mouse): # if new city button overlaps with mouse position
-                print("NEW CITY")
-                new_city_click = True
-                getLocation()
-                getWeather()
-            elif pygame.Rect.collidepoint(show_more_buttonRect, mouse): # if more button overlaps with mouse position
-                print("SHOW MORE!!!")
-                show_more_click = True
-            elif pygame.Rect.collidepoint(hide_buttonRect, mouse):
-                print("HIDE MENU")
-                show_more_click = False
+  # render/draw the screen
+  screen.fill(BLACK)
+  screen.blit(background, backgroundRect)
 
-    # render/draw the screen
-    screen.fill(BLACK)
-    screen.blit(background, backgroundRect)
+  # draw buttons
+  screen.blit(refresh_button, refresh_buttonRect)
+  screen.blit(search_button, search_buttonRect)
+  screen.blit(show_more_button, show_more_buttonRect)
 
-    # draw buttons
-    screen.blit(refresh_button, refresh_buttonRect)
-    screen.blit(search_button, search_buttonRect)
-    screen.blit(show_more_button, show_more_buttonRect)
+  # display_text(size, text, colour, x, y)
+  display_text(150, weather_var['show_current_temp'], font_col, 40, 55)
+  display_text(40, weather_var['show_current_temp_units'], font_col, 205, 65)
+  display_text(25, weather_var['show_forecast'], font_col, 45, 200)
+  display_text(20, f"Last Updated: {weather_var['show_update_time']}", font_col, 550, 20)
+  display_text(60, weather_var['show_date'], font_col, 550, 55)
+  display_text(20, weather_var['show_high'], font_col, 80, 400)
+  display_text(20, weather_var['show_low'], font_col, 80, 460)
+  # bottom bar text
+  display_text(16, weather_var['show_windspeed'], BLACK, 70, 555)
+  display_text(16, weather_var['show_cloud_bh'], BLACK, 250, 555)
 
-    # display_text(size, text, colour, x, y)
-    # display_text(25, weather_var['show_location'], font_col, 70, 20)
-    display_text(150, weather_var['show_current_temp'], font_col, 40, 55)
-    display_text(40, weather_var['show_current_temp_units'], font_col, 205, 65)
-    display_text(25, weather_var['show_forecast'], font_col, 45, 200)
-    display_text(20, f"Last Updated: {weather_var['show_update_time']}", font_col, 550, 20)
-    display_text(60, weather_var['show_date'], font_col, 550, 55)
-    display_text(20, weather_var['show_high'], font_col, 80, 400)
-    display_text(20, weather_var['show_low'], font_col, 80, 460)
-    # bottom bar text
-    display_text(16, weather_var['show_windspeed'], BLACK, 70, 555)
-    display_text(16, weather_var['show_cloud_bh'], BLACK, 205, 555)
-    display_text(16, weather_var['show_cloud_type'], BLACK, 377, 555)
+  # show text input box on screen
+  textinput.update(events)
+  screen.blit(textinput.get_surface(), (25, 20))
 
-    # show text input box on screen
-    textinput.update(events)
-    screen.blit(textinput.get_surface(), (25, 20))
+  if show_more_click == True:
+      showMore()
+      screen.blit(hide_button, hide_buttonRect)
 
-    if show_more_click == True:
-        showMore()
-        screen.blit(hide_button, hide_buttonRect)
-
-    # display all objects on the screen
-    pygame.display.flip()
+  # display all objects on the screen
+  pygame.display.flip()
 
 pygame.quit()
