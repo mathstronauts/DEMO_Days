@@ -14,6 +14,7 @@ BLACK = (0, 0, 0)
 
 # define Earth weather text display variables:
 weather_var = {
+    "show_location": "",
     "show_current_temp": "",
     "show_current_temp_units": "",
     "show_forecast": "",
@@ -27,6 +28,7 @@ weather_var = {
     "show_pressure": "",
     "show_humidity": "",
     "show_windspeed": "",
+    "show_cloud_bh": "",
 }
 
 # convert from epoch to standard time
@@ -35,35 +37,12 @@ def convert_time(time):
     return standard_time
 
 # =============================== API Data ======================================
-# user input city location
-textinput = mathstropy.TextInput(initial_string="Toronto", font_size=30)  # initial string will be our example city
-
 # API URLs
 API_KEY = "bc93af7ec21317a25fa7d755f7391e39"
-
-# One Call Weather API
 weather_URL = "https://api.openweathermap.org/data/2.5/onecall?"
-
-# Geocoding API
-geo_URL = "http://api.openweathermap.org/geo/1.0/direct?"
-
-def getLocation():
-    global new_city_click
-    # get city location from user input
-    city_name = textinput.get_text()
-
-    # Extract Coordinates using Geocoding API
-    geo_parameters = {
-        "q": city_name,
-        "appid": API_KEY
-    }
-    geo_response = requests.get(geo_URL, params=geo_parameters)
-    print("Geocode API Status:", geo_response.status_code)
-    geo_coord = geo_response.json()
-    geo_first = geo_coord[0]  # get first item in list of possible cities (most popular)
-    lat = float(geo_first["lat"])  # north is positive, south is negative
-    lon = float(geo_first["lon"])  # east is positive, west is negative
-    return [lat, lon]
+# use Toronto as an example:
+lat = (43.7001)
+lon = (-79.4163)
 
 # determine cloud type
 def cloud_base_height(temp, dew):
@@ -72,74 +51,73 @@ def cloud_base_height(temp, dew):
     return cloud_base
 
 def getWeather():
-    global background, backgroundRect, font_col
-    global weather_var
+  global lat, lon
+  global background, backgroundRect, font_col
+  global weather_var
 
-    # get update time
-    update_time = datetime.now()  # get the current time
-    weather_var['show_update_time'] = mathstropy.time_format(update_time)
+  # change city location
+  global new_city_click
+  if new_city_click == True:
+    latlon = textinput.get_text()
+    lat = latlon.split(", ")[0]
+    lon = latlon.split(", ")[1]
+    print(lat, " ", lon)
+    new_city_click = False
 
-    # get city location from user input
-    # latlon = textinput.get_text()
-    # lat = latlon.split(", ")[0]
-    # lon = latlon.split(", ")[1]
-    # print(lat, " ", lon)
+  update_time = datetime.now()  # get the current time
+  weather_var['show_update_time'] = mathstropy.time_format(update_time)
 
-    # get location variables using getLocation() function
-    lat = getLocation()[0]
-    lon = getLocation()[1]
-
-    # Extract City Weather using One Call Weather API
-    weather_parameters = {
+  # Extract City Weather using One Call Weather API
+  weather_parameters = {
       "lat": lat,
       "lon": lon,
       "appid": API_KEY,
       "units": "metric"
-    }
-    weather_response = requests.get(weather_URL, params=weather_parameters)
-    print("One Call Weather API Status:", weather_response.status_code)
-    weather_data = weather_response.json()
-    current_weather = weather_data["current"]
-    mathstropy.jprint(current_weather)  # print the weather data being extracted from the API
-    daily_weather = (weather_data["daily"])[0]["temp"]
+  }
 
-    # calculate cloud base height
-    current_temp = round(current_weather["temp"])  # current temperature
-    current_forecast = (current_weather["weather"])[0]["main"]  # current weather forecast
-    dew_point = current_weather["dew_point"]  # current dew point temperature
+  weather_response = requests.get(weather_URL, params=weather_parameters)
+  print("One Call Weather API Status:", weather_response.status_code)
+  weather_data = weather_response.json()
+  current_weather = weather_data["current"]
+  daily_weather = (weather_data["daily"])[0]["temp"]
 
-    if current_forecast != "Clear":
+  current_temp = round(current_weather["temp"])  # current temperature
+  current_forecast = (current_weather["weather"])[0]["main"]  # current weather forecast
+  dew_point = current_weather["dew_point"]  # current dew point temperature
+  
+  cloud_bh = "- -"
+  if current_forecast != "Clear":
       cloud_bh = round(cloud_base_height(current_temp, dew_point))
-    else:
+  else:
       cloud_bh = "- -"
 
-    # convert date and time variables from epoch to standard time format
-    date = convert_time(current_weather["dt"])
-    sunrise_time = convert_time(current_weather["sunrise"])
-    sunset_time = convert_time(current_weather["sunset"])
+  date = convert_time(current_weather["dt"])
+  sunrise_time = convert_time(current_weather["sunrise"])
+  sunset_time = convert_time(current_weather["sunset"])
 
-    # format date and time variables
-    weather_var['show_date'] = mathstropy.date_format(date)
-    weather_var['show_sunrise_time'] = mathstropy.time_format(sunrise_time)
-    weather_var['show_sunset_time'] = mathstropy.time_format(sunset_time)
+  # format datetimes, .stftime() is a method to format the datetime object
+  weather_var['show_date'] = mathstropy.date_format(date)
+  weather_var['show_sunrise_time'] = mathstropy.time_format(sunrise_time)
+  weather_var['show_sunset_time'] = mathstropy.time_format(sunset_time)
 
-    # text to display on app screen
-    weather_var['show_forecast'] = current_forecast  # current weather forecast
-    weather_var['show_current_temp'] = current_temp  # current temperature
-    weather_var['show_current_temp_units'] = chr(176) + "C"
-    weather_var['show_high'] = "High: " + str(round(daily_weather["max"], 1)) + chr(176)
-    weather_var['show_low'] = "Low: " + str(round(daily_weather["min"], 1)) + chr(176)
+  # text to display on app screen
+  weather_var['show_forecast'] = current_forecast  # current weather forecast
+  weather_var['show_current_temp'] = current_temp  # current temperature
+  weather_var['show_current_temp_units'] = chr(176) + "C"
+  weather_var['show_high'] = "High: " + str(round(daily_weather["max"], 1)) + chr(176)
+  weather_var['show_low'] = "Low: " + str(round(daily_weather["min"], 1)) + chr(176)
 
-    # text under Show More
-    weather_var['show_uvi'] = current_weather["uvi"]
-    weather_var['show_humidity'] = str(current_weather["humidity"]) + " %"
-    weather_var['show_pressure'] = str(current_weather["pressure"]) + " hPa"
+  # text under Show More
+  weather_var['show_uvi'] = current_weather["uvi"]
+  weather_var['show_humidity'] = str(current_weather["humidity"]) + " %"
+  weather_var['show_pressure'] = str(current_weather["pressure"]) + " hPa"
 
-    # text in bottom left corner
-    weather_var['show_windspeed'] = str(round((current_weather["wind_speed"]) * 3.6)) + " km/h" # current wind speed m/s, (x 3.6) to convert to km/h
-    weather_var['show_cloud_bh'] = str(cloud_bh) + " m"
+  # text in bottom left corner
+  weather_var['show_windspeed'] = str(round((current_weather["wind_speed"]) * 3.6)) + " km/h" # current wind speed m/s, (x 3.6) to convert to km/h
+  weather_var['show_cloud_bh'] = str(cloud_bh) + " m"
 
-    weather_var = mathstropy.dict_str(weather_var)  # convert all dictionary items to string
+  weather_var = mathstropy.dict_str(weather_var)  # convert all dictionary items to string    
+  print(weather_var)
 
 # ======================== GRAPHICS ==========================
 # screen setup
@@ -190,9 +168,12 @@ def display_text(size, text, colour, x, y):
     textRect.topleft = (x, y)  # specify rect position of text on screen
     screen.blit(textSurf, textRect)  # show the text on the screen
 
+# display text input box
+textinput = mathstropy.TextInput(initial_string="43.7001, -79.4163", font_size=30)
+
 def showMore():
     global weather_var
-    # icon reference positions
+    # icon positions
     ref_x = 565
     ref_y = 180
     icon_height = sunrise_i.get_height() + 10
@@ -213,11 +194,11 @@ def showMore():
     humidity_iRect = humidity_i.get_rect(topleft=(ref_x, humidity_y))
 
     # draw weather info text
-    display_text(16, f"Sunrise: {weather_var['show_sunrise_time']}", font_col, 600, 185)
-    display_text(16, f"Sunset: {weather_var['show_sunset_time']}", font_col, 600, 220)
-    display_text(16, f"UV Index: {weather_var['show_uvi']}", font_col, 600, 255)
-    display_text(16, f"Pressure: {weather_var['show_pressure']}", font_col, 600, 290)
-    display_text(16, f"Humidity: {weather_var['show_humidity']}", font_col, 600, 325)
+    display_text(16, f"Sunrise: {weather_var['show_sunrise_time']}", font_col, 625, 180)
+    display_text(16, f"Sunset: {weather_var['show_sunset_time']}", font_col, 620, 210)
+    display_text(16, f"UV Index: {weather_var['show_uvi']}", font_col, 600, 260)
+    display_text(16, f"Pressure: {weather_var['show_pressure']}", font_col, 630, 300)
+    display_text(16, f"Humidity: {weather_var['show_humidity']}", font_col, 650, 350)
 
     # draw weather MORE info icons on screen
     screen.blit(sunrise_i, sunrise_iRect)
@@ -232,7 +213,6 @@ show_more_click = False
 new_city_click = False
 
 # get location and weather data when app launches
-getLocation()  # Get latitude and longitude for city location
 getWeather()  # Initialize weather data
 
 # ====================== APP DISPLAY LOOP =========================
@@ -253,9 +233,7 @@ while running:
           elif pygame.Rect.collidepoint(search_buttonRect, mouse): # if new city button overlaps with mouse position
               print("NEW CITY")
               new_city_click = True
-              getLocation()
               getWeather()
-              new_city_click = False
           elif pygame.Rect.collidepoint(show_more_buttonRect, mouse): # if more button overlaps with mouse position
               print("SHOW MORE!!!")
               show_more_click = True

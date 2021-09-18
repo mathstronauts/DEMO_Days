@@ -1,7 +1,10 @@
 """
 THIS FILE CONTAINS FUNCTIONS AND OBJECTS TO BE ADDED TO THE MATHSTROPY LIBRARY
 """
-
+"""
+ * Copyright (C) Mathstronauts. All rights reserved.
+ * This information is confidential and proprietary to Mathstronauts and may not be used, modified, copied or distributed.
+"""
 import json
 
 def jprint(obj):
