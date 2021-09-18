@@ -24,8 +24,6 @@ weather_var = {
     "show_pressure": "",
     "show_humidity": "",
     "show_windspeed": "",
-    "show_cloud_bh": "",
-    "show_cloud_type": ""
 }
 
 # convert from epoch to standard time
@@ -79,22 +77,22 @@ def getWeather():
     """
     global new_city_click
     if new_city_click == True:
-      latlon = latloninput.get_text()
-      lat = latlon.split(", ")[0]
-      lon = latlon.split(", ")[1]
-      print(lat, " ", lon)
-      new_city_click = False
+    latlon = latloninput.get_text()
+    lat = latlon.split(", ")[0]
+    lon = latlon.split(", ")[1]
+    print(lat, " ", lon)
+    new_city_click = False
     """
 
     update_time = datetime.now()  # get the current time
-    weather_var['show_update_time'] = (f"{update_time.strftime('%I')}:" + f"{update_time.strftime('%M')}" + f" {update_time.strftime('%p')}")
+    weather_var['show_update_time'] = mathstropy.time_format(update_time)
 
     # Extract City Weather using One Call Weather API
     weather_parameters = {
-        "lat": lat,
-        "lon": lon,
-        "appid": API_KEY,
-        "units": "metric"
+      "lat": lat,
+      "lon": lon,
+      "appid": API_KEY,
+      "units": "metric"
     }
 
     weather_response = requests.get(weather_URL, params=weather_parameters)
@@ -105,47 +103,42 @@ def getWeather():
 
     current_temp = round(current_weather["temp"])  # current temperature
     current_forecast = (current_weather["weather"])[0]["main"]  # current weather forecast
-    pressure = current_weather["pressure"]  # current atmospheric pressure in hectopascals (hPa) which equals millibar (mb)
     dew_point = current_weather["dew_point"]  # current dew point temperature
-    UVI = current_weather["uvi"]
-    wind_speed = round((current_weather["wind_speed"]) * 3.6)  # current wind speed m/s, (x 3.6) to convert to km/h
-    humidity = current_weather["humidity"]  # current humidity in %
+
+    cloud_bh = "- -"
+    if current_forecast != "Clear":
+      cloud_bh = round(cloud_base_height(current_temp, dew_point))
+    else:
+      cloud_bh = "- -"
+
     date = convert_time(current_weather["dt"])
     sunrise_time = convert_time(current_weather["sunrise"])
     sunset_time = convert_time(current_weather["sunset"])
 
     # format datetimes, .stftime() is a method to format the datetime object
-    weather_var['show_date'] = date.strftime('%x')
-    weather_var['show_sunrise_time'] = (
-            f"{sunrise_time.strftime('%I')}:" + f"{sunrise_time.strftime('%M')}" + f" {sunrise_time.strftime('%p')}")
-    weather_var['show_sunset_time'] = (
-            f"{sunset_time.strftime('%I')}:" + f"{sunset_time.strftime('%M')}" + f" {sunset_time.strftime('%p')}")
-
-    daily_max_temp = round(daily_weather["max"], 1)  # daily temperature high
-    daily_min_temp = round(daily_weather["min"], 1)  # daily temperature low
+    weather_var['show_date'] = mathstropy.date_format(date)
+    weather_var['show_sunrise_time'] = mathstropy.time_format(sunrise_time)
+    weather_var['show_sunset_time'] = mathstropy.time_format(sunset_time)
 
     # text to display on app screen
-    weather_var['show_forecast'] = str(current_forecast)
-    weather_var['show_current_temp'] = str(current_temp)
+    weather_var['show_forecast'] = current_forecast  # current weather forecast
+    weather_var['show_current_temp'] = current_temp  # current temperature
     weather_var['show_current_temp_units'] = chr(176) + "C"
     weather_var['show_location'] = city_name
-    weather_var['show_high'] = f"High: {daily_max_temp}" + chr(176)
-    weather_var['show_low'] = f"Low: {daily_min_temp}" + chr(176)
+    weather_var['show_high'] = "High: " + str(round(daily_weather["max"], 1)) + chr(176)
+    weather_var['show_low'] = "Low: " + str(round(daily_weather["min"], 1)) + chr(176)
 
     # text under Show More
-    weather_var['show_uvi'] = str(UVI)
-    weather_var['show_humidity'] = str(humidity) + " %"
-    weather_var['show_pressure'] = str(pressure) + " hPa"
+    weather_var['show_uvi'] = current_weather["uvi"]
+    weather_var['show_humidity'] = str(current_weather["humidity"]) + " %"
+    weather_var['show_pressure'] = str(current_weather["pressure"]) + " hPa"
 
     # text in bottom left corner
-    cloud_bh = "- -"
-    if current_forecast != "Clear":
-        cloud_bh = round(cloud_base_height(current_temp, dew_point))
-    else:
-        cloud_bh = "- -"
-
-    weather_var['show_windspeed'] = str(wind_speed) + " km/h"
+    weather_var['show_windspeed'] = str(round((current_weather["wind_speed"]) * 3.6)) + " km/h" # current wind speed m/s, (x 3.6) to convert to km/h
     weather_var['show_cloud_bh'] = str(cloud_bh) + " m"
+
+    weather_var = mathstropy.dict_str(weather_var)  # convert all dictionary items to string    
+    print(weather_var)
 
     
 

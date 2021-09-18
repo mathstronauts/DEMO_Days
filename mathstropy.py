@@ -8,6 +8,29 @@ def jprint(obj):
     text = json.dumps(obj, sort_keys=True, indent=4)
     print(text)
 
+from datetime import *
+
+def dict_str(dictionary):
+    keys_values = dictionary.items()
+    new_dict = {
+        str(key):str(value) for key, value in keys_values
+    }
+    return new_dict
+
+def time_format(time_var):
+    hour = time_var.strftime('%I')
+    minute = time_var.strftime('%M')
+    period = time_var.strftime('%p')
+  
+    combine_time = f"{hour}:{minute} {period}"
+  
+    return combine_time
+
+def date_format(date_var):
+    date = date_var.strftime('%x')
+
+    return date
+
 """
 Copyright 2017, Silas Gyger, silasgyger@gmail.com, All rights reserved.
 
