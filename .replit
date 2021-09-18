@@ -1,0 +1,3 @@
+# IGNITE Tech Explore
+language = "python3"
+run = "python demo_full_code.py"
