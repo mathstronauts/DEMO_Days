@@ -206,7 +206,6 @@ def showMore():
 # App Conditions
 running = True  # this means that app will run while this variable is true
 show_more_click = False
-new_city_click = False
 
 # get location and weather data when app launches
 getWeather()  # Initialize weather data
@@ -228,9 +227,7 @@ while running:
                 getWeather()
             elif pygame.Rect.collidepoint(search_buttonRect, mouse):  # if new city button overlaps with mouse position
                 print("NEW CITY")
-                new_city_click = True
                 getWeather()
-                new_city_click = False
             elif pygame.Rect.collidepoint(show_more_buttonRect, mouse):  # if more button overlaps with mouse position
                 print("SHOW MORE!!!")
                 show_more_click = True
