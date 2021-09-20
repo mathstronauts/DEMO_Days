@@ -38,12 +38,34 @@ def convert_time(time):
 # =============================== API Data ======================================
 # user input city location
 textinput = mathstropy.TextInput(initial_string="43.7001, -79.4163", font_size=30)  # initial string is our example city
+# textinput = mathstropy.TextInput(initial_string="Toronto", font_size=30)
 
 # API URLs
 API_KEY = "bc93af7ec21317a25fa7d755f7391e39"
 
 # One Call Weather API
 weather_URL = "https://api.openweathermap.org/data/2.5/onecall?"
+
+# Geocoding API
+# geo_URL = "http://api.openweathermap.org/geo/1.0/direct?"
+
+# def getLocation():
+#     global new_city_click
+#     # get city location from user input
+#     city_name = textinput.get_text()
+
+#     # Extract Coordinates using Geocoding API
+#     geo_parameters = {
+#         "q": city_name,
+#         "appid": API_KEY
+#     }
+#     geo_response = requests.get(geo_URL, params=geo_parameters)
+#     print("Geocode API Status:", geo_response.status_code)
+#     geo_coord = geo_response.json()
+#     geo_first = geo_coord[0]  # get first item in list of possible cities (most popular)
+#     lat = float(geo_first["lat"])  # north is positive, south is negative
+#     lon = float(geo_first["lon"])  # east is positive, west is negative
+#     return [lat, lon]
 
 # determine cloud type
 def cloud_base_height(temp, dew):
@@ -64,6 +86,10 @@ def getWeather():
     lat = latlon.split(", ")[0]
     lon = latlon.split(", ")[1]
     print(lat, " ", lon)
+
+    # get location variables using getLocation() function
+    # lat = getLocation()[0]
+    # lon = getLocation()[1]
 
     # Extract City Weather using One Call Weather API
     weather_parameters = {
@@ -208,6 +234,7 @@ running = True  # this means that app will run while this variable is true
 show_more_click = False
 
 # get location and weather data when app launches
+# getLocation()  # Get latitude and longitude for city location
 getWeather()  # Initialize weather data
 
 # ====================== APP DISPLAY LOOP =========================
@@ -227,6 +254,7 @@ while running:
                 getWeather()
             elif pygame.Rect.collidepoint(search_buttonRect, mouse):  # if new city button overlaps with mouse position
                 print("NEW CITY")
+                # getLocation()
                 getWeather()
             elif pygame.Rect.collidepoint(show_more_buttonRect, mouse):  # if more button overlaps with mouse position
                 print("SHOW MORE!!!")
