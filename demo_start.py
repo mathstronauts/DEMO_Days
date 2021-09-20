@@ -37,8 +37,8 @@ def convert_time(time):
 
 # =============================== API Data ======================================
 # user input city location
-textinput = mathstropy.TextInput(initial_string="43.7001, -79.4163", font_size=30)  # initial string is our example city
-# textinput = mathstropy.TextInput(initial_string="Toronto", font_size=30)
+textinput = mathstropy.TextInput(initial_string="43.7001, -79.4163", font_size=30)
+# initial string is our example city, change initial_string to "Toronto"
 
 # API URLs
 API_KEY = "bc93af7ec21317a25fa7d755f7391e39"
