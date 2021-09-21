@@ -30,12 +30,7 @@ weather_var = {
     "show_cloud_bh": "",
 }
 
-# convert from epoch to standard time
-def convert_time(time):
-    standard_time = datetime.fromtimestamp(time)
-    return standard_time
-
-# =============================== API Data ======================================
+# ======== API Data ========
 # user input city location
 textinput = mathstropy.TextInput(initial_string="43.7001, -79.4163", font_size=30)
 # initial string is our example city, change initial_string to "Toronto"
@@ -50,7 +45,6 @@ weather_URL = "https://api.openweathermap.org/data/2.5/onecall?"
 # geo_URL = "http://api.openweathermap.org/geo/1.0/direct?"
 
 # def getLocation():
-#     global new_city_click
 #     # get city location from user input
 #     city_name = textinput.get_text()
 
@@ -66,12 +60,6 @@ weather_URL = "https://api.openweathermap.org/data/2.5/onecall?"
 #     lat = float(geo_first["lat"])  # north is positive, south is negative
 #     lon = float(geo_first["lon"])  # east is positive, west is negative
 #     return [lat, lon]
-
-# determine cloud type
-def cloud_base_height(temp, dew):
-    cloud_base = (temp - dew) / 2.5 * 1000 / 3.280839895
-    print("The height of clouds is", round(cloud_base), "metres")
-    return cloud_base
 
 def getWeather():
     global background, backgroundRect, font_col
@@ -98,6 +86,7 @@ def getWeather():
         "appid": API_KEY,
         "units": "metric"
     }
+
     weather_response = requests.get(weather_URL, params=weather_parameters)
     print("One Call Weather API Status:", weather_response.status_code)
     weather_data = weather_response.json()
@@ -111,19 +100,14 @@ def getWeather():
     dew_point = current_weather["dew_point"]  # current dew point temperature
 
     if current_forecast != "Clear":
-        cloud_bh = round(cloud_base_height(current_temp, dew_point))
+        cloud_bh = round(mathstropy.cloud_base_height(current_temp, dew_point))
     else:
         cloud_bh = "- -"
 
-    # convert date and time variables from epoch to standard time format
-    date = convert_time(current_weather["dt"])
-    sunrise_time = convert_time(current_weather["sunrise"])
-    sunset_time = convert_time(current_weather["sunset"])
-
     # format date and time variables
-    weather_var['show_date'] = mathstropy.date_format(date)
-    weather_var['show_sunrise_time'] = mathstropy.time_format(sunrise_time)
-    weather_var['show_sunset_time'] = mathstropy.time_format(sunset_time)
+    weather_var['show_date'] = mathstropy.date_format(current_weather["dt"])
+    weather_var['show_sunrise_time'] = mathstropy.time_format(current_weather["sunrise"])
+    weather_var['show_sunset_time'] = mathstropy.time_format(current_weather["sunset"])
 
     # text to display on app screen
     weather_var['show_forecast'] = current_forecast  # current weather forecast
@@ -138,7 +122,7 @@ def getWeather():
     weather_var['show_pressure'] = str(current_weather["pressure"]) + " hPa"
 
     # text in bottom left corner
-    weather_var['show_windspeed'] = str(round((current_weather["wind_speed"]) * 3.6)) + " km/h"  # m/s, (x 3.6) to convert to km/h
+    weather_var['show_windspeed'] = str(round((current_weather["wind_speed"]) * 3.6)) + " km/h"
     weather_var['show_cloud_bh'] = str(cloud_bh) + " m"
 
     weather_var = mathstropy.dict_str(weather_var)  # convert all dictionary items to string
@@ -155,11 +139,6 @@ pygame.init()
 # create window and clock
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Earth Weather App")
-
-# change our app icon image!
-app_icon_file = "images/weather_icon_test4.png"
-app_icon = pygame.image.load(app_icon_file)
-pygame.display.set_icon(app_icon)
 
 # Background Weather Image
 font_col = BLACK
@@ -184,43 +163,22 @@ UVI_i = pygame.image.load("images/UVI_icon.png")
 pressure_i = pygame.image.load("images/pressure_icon.png")
 humidity_i = pygame.image.load("images/humidity_icon.png")
 
-# function to display text on screen
-def display_text(size, text, colour, x, y):
-    font = pygame.font.Font('freesansbold.ttf', size)  # specify the font and size
-    textSurf = font.render(text, True, colour)  # create a surface for the text object
-    textRect = textSurf.get_rect()  # get rect position of text on the screen
-    textRect.topleft = (x, y)  # specify rect position of text on screen
-    screen.blit(textSurf, textRect)  # show the text on the screen
-
 # function to display text when Show More button is clicked
 def showMore():
     global weather_var
-    # icon reference positions
-    ref_x = 565
-    ref_y = 180
-    icon_height = sunrise_i.get_height() + 10
-    icon_width = sunrise_i.get_width() + 10
-
-    # icon y-position
-    sunrise_y = ref_y
-    sunset_y = ref_y + icon_height
-    UVI_y = ref_y + 2 * (icon_height)
-    pressure_y = ref_y + 3 * (icon_height)
-    humidity_y = ref_y + 4 * (icon_height)
-
     # create icon rects
-    sunrise_iRect = sunrise_i.get_rect(topleft=(ref_x, sunrise_y))
-    sunset_iRect = sunset_i.get_rect(topleft=(ref_x, sunset_y))
-    UVI_iRect = UVI_i.get_rect(topleft=(ref_x, UVI_y))
-    pressure_iRect = pressure_i.get_rect(topleft=(ref_x, pressure_y))
-    humidity_iRect = humidity_i.get_rect(topleft=(ref_x, humidity_y))
+    sunrise_iRect = sunrise_i.get_rect(topleft=(565, 180))
+    sunset_iRect = sunset_i.get_rect(topleft=(565, 215))
+    UVI_iRect = UVI_i.get_rect(topleft=(565, 250))
+    pressure_iRect = pressure_i.get_rect(topleft=(565, 285))
+    humidity_iRect = humidity_i.get_rect(topleft=(565, 320))
 
     # draw weather info text
-    display_text(16, f"Sunrise: {weather_var['show_sunrise_time']}", font_col, 660, 155)
-    display_text(16, f"Sunset: {weather_var['show_sunset_time']}", font_col, 500, 210)
-    display_text(16, f"UV Index: {weather_var['show_uvi']}", font_col, 600, 260)
-    display_text(16, f"Pressure: {weather_var['show_pressure']}", font_col, 660, 320)
-    display_text(16, f"Humidity: {weather_var['show_humidity']}", font_col, 470, 350)
+    mathstropy.display_text(16, f"Sunrise: {weather_var['show_sunrise_time']}", font_col, 660, 155)
+    mathstropy.display_text(16, f"Sunset: {weather_var['show_sunset_time']}", font_col, 500, 210)
+    mathstropy.display_text(16, f"UV Index: {weather_var['show_uvi']}", font_col, 600, 260)
+    mathstropy.display_text(16, f"Pressure: {weather_var['show_pressure']}", font_col, 660, 320)
+    mathstropy.display_text(16, f"Humidity: {weather_var['show_humidity']}", font_col, 470, 350)
 
     # draw weather MORE info icons on screen
     screen.blit(sunrise_i, sunrise_iRect)
@@ -248,16 +206,15 @@ while running:
             running = False  # stop game and quite
 
         if event.type == pygame.MOUSEBUTTONDOWN:
-            print("Mouse click!")
-            if pygame.Rect.collidepoint(refresh_buttonRect, mouse):  # if refresh button overlaps with mouse position
+            if pygame.Rect.collidepoint(refresh_buttonRect, mouse):  # refresh button
                 print("REFRESH!")
                 getWeather()
-            elif pygame.Rect.collidepoint(search_buttonRect, mouse):  # if new city button overlaps with mouse position
+            elif pygame.Rect.collidepoint(search_buttonRect, mouse):  # new city button
                 print("NEW CITY")
                 # getLocation()
                 getWeather()
-            elif pygame.Rect.collidepoint(show_more_buttonRect, mouse):  # if more button overlaps with mouse position
-                print("SHOW MORE!!!")
+            elif pygame.Rect.collidepoint(show_more_buttonRect, mouse):  # more button
+                print("SHOW MORE")
                 show_more_click = True
             elif pygame.Rect.collidepoint(hide_buttonRect, mouse):
                 print("HIDE MENU")
@@ -273,16 +230,16 @@ while running:
     screen.blit(show_more_button, show_more_buttonRect)
 
     # display_text(size, text, colour, x, y)
-    display_text(150, weather_var['show_current_temp'], font_col, 40, 55)
-    display_text(40, weather_var['show_current_temp_units'], font_col, 205, 65)
-    display_text(25, weather_var['show_forecast'], font_col, 45, 200)
-    display_text(20, f"Last Updated: {weather_var['show_update_time']}", font_col, 550, 20)
-    display_text(60, weather_var['show_date'], font_col, 550, 55)
-    display_text(20, weather_var['show_high'], font_col, 80, 400)
-    display_text(20, weather_var['show_low'], font_col, 80, 460)
+    mathstropy.display_text(150, weather_var['show_current_temp'], font_col, 40, 55)
+    mathstropy.display_text(40, weather_var['show_current_temp_units'], font_col, 205, 65)
+    mathstropy.display_text(25, weather_var['show_forecast'], font_col, 45, 200)
+    mathstropy.display_text(20, f"Last Updated: {weather_var['show_update_time']}", font_col, 550, 20)
+    mathstropy.display_text(60, weather_var['show_date'], font_col, 550, 55)
+    mathstropy.display_text(20, weather_var['show_high'], font_col, 80, 400)
+    mathstropy.display_text(20, weather_var['show_low'], font_col, 80, 460)
     # bottom bar text
-    display_text(16, weather_var['show_windspeed'], BLACK, 70, 555)
-    display_text(16, weather_var['show_cloud_bh'], BLACK, 250, 555)
+    mathstropy.display_text(16, weather_var['show_windspeed'], BLACK, 70, 555)
+    mathstropy.display_text(16, weather_var['show_cloud_bh'], BLACK, 250, 555)
 
     # show text input box on screen
     textinput.update(events)

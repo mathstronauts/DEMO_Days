@@ -1,39 +1,59 @@
 """
-THIS FILE CONTAINS FUNCTIONS AND OBJECTS TO BE ADDED TO THE MATHSTROPY LIBRARY
-"""
-"""
  * Copyright (C) Mathstronauts. All rights reserved.
  * This information is confidential and proprietary to Mathstronauts and may not be used, modified, copied or distributed.
 """
+
+# determine cloud type
+def cloud_base_height(temp, dew):
+    cloud_base = (temp - dew) / 2.5 * 1000 / 3.280839895
+    return cloud_base
+
+# format dictionary
 import json
 
 def jprint(obj):
     text = json.dumps(obj, sort_keys=True, indent=4)
     print(text)
 
+# format time values
 from datetime import *
 
-def dict_str(dictionary):
-    keys_values = dictionary.items()
-    new_dict = {
-        str(key):str(value) for key, value in keys_values
-    }
-    return new_dict
+# convert from epoch to standard time
+def convert_time(time):
+    standard_time = datetime.fromtimestamp(time)
+    return standard_time
 
 def time_format(time_var):
-    hour = time_var.strftime('%I')
-    minute = time_var.strftime('%M')
-    period = time_var.strftime('%p')
-  
+    int_type = isinstance(time_var, int)
+    if int_type == True:  # if the variable is in epoch time, it will be read as an integer and needs to be converted
+        time_standard = datetime.fromtimestamp(time_var)
+    else:  # else the variable is already in standard time
+        time_standard = time_var
+
+    hour = time_standard.strftime('%I')
+    minute = time_standard.strftime('%M')
+    period = time_standard.strftime('%p')
+
     combine_time = f"{hour}:{minute} {period}"
-  
     return combine_time
 
 def date_format(date_var):
-    date = date_var.strftime('%x')
+    int_type = isinstance(date_var, int)
+    if int_type == True:  # if the variable is in epoch time, it will be read as an integer and needs to be converted
+        date_standard = datetime.fromtimestamp(date_var)
+    else:  # else the variable is already in standard time
+        date_standard = date_var
 
+    date = date_standard.strftime('%x')
     return date
 
+# convert all dictionary values to string
+def dict_str(dictionary):
+    keys_values = dictionary.items()
+    new_dict = {
+        str(key): str(value) for key, value in keys_values
+    }
+    return new_dict
 """
 Copyright 2017, Silas Gyger, silasgyger@gmail.com, All rights reserved.
 
@@ -246,3 +266,22 @@ if __name__ == "__main__":
 
         pygame.display.update()
         clock.tick(30)
+
+# screen setup
+WIDTH = 800
+HEIGHT = 600
+FPS = 30
+
+# initialize pygame
+pygame.init()
+
+# create window and clock
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+
+# function to display text on screen
+def display_text(size, text, colour, x, y):
+    font = pygame.font.Font('freesansbold.ttf', size)  # specify the font and size
+    textSurf = font.render(text, True, colour)  # create a surface for the text object
+    textRect = textSurf.get_rect()  # get rect position of text on the screen
+    textRect.topleft = (x, y)  # specify rect position of text on screen
+    screen.blit(textSurf, textRect)  # show the text on the screen
