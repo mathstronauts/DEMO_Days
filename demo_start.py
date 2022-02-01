@@ -50,6 +50,7 @@ junk_file = "images/space_junk.png"
 satellite_file = "images/satellite_adv.png"
 debris_file = "images/space_debris2.png"
 laser_file = "images/laser_red.png"
+tesla_file = "images/tesla_roadster.png"
 
 start_button_file = "images/start_button.png"
 replay_button_file = "images/play_again_button.png"
@@ -75,7 +76,7 @@ def showTextBox():
     # timer
     time_passed = TIME_LIMIT - round(elapse_time / 1000)  # pygame gets time in milliseconds
     show_time = "Time: " + str(time_passed)
-    display_text(25, show_time, GREEN, 800, 15)
+    display_text(25, show_time, GREEN, 900, 15)
 
 def showGameOver():
     display_text(100, "GAME OVER", WHITE, int(WIDTH/2), 250)
@@ -87,8 +88,6 @@ def showGameOver():
 class Player(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)  # inherit Sprite class
-        # self.image = pygame.Surface((50, 50)) # rectangle shape
-        # self.image.fill(GREEN)
         self.image = pygame.image.load(player_file).convert()
         self.image.set_colorkey(BLACK)  # cancel out transparent background
         self.rect = self.image.get_rect()    # set rect dimentions
@@ -126,8 +125,6 @@ class Player(pygame.sprite.Sprite):
 class Junk(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)  # inherit Sprite class
-        # self.image = pygame.Surface((25, 25))
-        # self.image.fill(YELLOW)
         self.image = pygame.image.load(junk_file).convert()
         self.image.set_colorkey(BLACK)
         self.rect = self.image.get_rect()
@@ -139,7 +136,6 @@ class Junk(pygame.sprite.Sprite):
     def reset(self):  # create a method to reset the sprite to a random position
         self.rect.x = random.randint(-500, -50)  # start off screen
         self.rect.y = random.randint(0, HEIGHT - self.rect.height)
-        # self.x_speed = random.randint(8, 18)  # set a random speed
 
     def update(self):
         # update position
@@ -151,8 +147,6 @@ class Junk(pygame.sprite.Sprite):
 class Satellite(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
-        # self.image = pygame.Surface((100, 80))
-        # self.image.fill(BLUE)
         self.image = pygame.image.load(satellite_file).convert()
         self.image.set_colorkey(BLACK)
         self.rect = self.image.get_rect()
@@ -173,8 +167,6 @@ class Satellite(pygame.sprite.Sprite):
 class Debris(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
-        # self.image = pygame.Surface((100, 80))
-        # self.image.fill(RED)
         self.image = pygame.image.load(debris_file).convert()
         self.image.set_colorkey(BLACK)
         self.rect = self.image.get_rect()
@@ -195,8 +187,6 @@ class Debris(pygame.sprite.Sprite):
 class Laser(pygame.sprite.Sprite):
     def __init__(self, x, y):  # the laser class has parameters for the x and y rect position
         pygame.sprite.Sprite.__init__(self)
-        # self.image = pygame.Surface((30, 10))
-        # self.image.fill(WHITE)
         self.image = pygame.image.load(laser_file).convert()
         self.image.set_colorkey(BLACK)
         self.rect = self.image.get_rect()

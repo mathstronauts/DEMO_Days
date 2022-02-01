@@ -2,10 +2,6 @@
  * Copyright (C) Mathstronauts. All rights reserved.
  * This information is confidential and proprietary to Mathstronauts and may not be used, modified, copied or distributed.
 """
-"""
- * Copyright (C) Mathstronauts. All rights reserved.
- * This information is confidential and proprietary to Mathstronauts and may not be used, modified, copied or distributed.
-"""
 # Space Junk game part 2
 import pygame
 import random
@@ -54,6 +50,7 @@ junk_file = "images/space_junk.png"
 satellite_file = "images/satellite_adv.png"
 debris_file = "images/space_debris2.png"
 laser_file = "images/laser_red.png"
+tesla_file = "images/tesla_roadster.png"
 
 start_button_file = "images/start_button.png"
 replay_button_file = "images/play_again_button.png"
@@ -91,8 +88,6 @@ def showGameOver():
 class Player(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)  # inherit Sprite class
-        # self.image = pygame.Surface((50, 50)) # rectangle shape
-        # self.image.fill(GREEN)
         self.image = pygame.image.load(player_file).convert()
         self.image.set_colorkey(BLACK)  # cancel out transparent background
         self.rect = self.image.get_rect()    # set rect dimentions
@@ -130,8 +125,6 @@ class Player(pygame.sprite.Sprite):
 class Junk(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)  # inherit Sprite class
-        # self.image = pygame.Surface((25, 25))
-        # self.image.fill(YELLOW)
         self.image = pygame.image.load(junk_file).convert()
         self.image.set_colorkey(BLACK)
         self.rect = self.image.get_rect()
@@ -143,7 +136,6 @@ class Junk(pygame.sprite.Sprite):
     def reset(self):  # create a method to reset the sprite to a random position
         self.rect.x = random.randint(-500, -50)  # start off screen
         self.rect.y = random.randint(0, HEIGHT - self.rect.height)
-        # self.x_speed = random.randint(8, 18)  # set a random speed
 
     def update(self):
         # update position
@@ -155,9 +147,8 @@ class Junk(pygame.sprite.Sprite):
 class Satellite(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
-        # self.image = pygame.Surface((100, 80))
-        # self.image.fill(BLUE)
-        self.image = pygame.image.load(satellite_file).convert()
+        # self.image = pygame.image.load(satellite_file).convert()
+        self.image = pygame.image.load(tesla_file).convert()
         self.image.set_colorkey(BLACK)
         self.rect = self.image.get_rect()
         self.rect.right = random.randint(-1000, -500)
@@ -177,8 +168,6 @@ class Satellite(pygame.sprite.Sprite):
 class Debris(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
-        # self.image = pygame.Surface((100, 80))
-        # self.image.fill(RED)
         self.image = pygame.image.load(debris_file).convert()
         self.image.set_colorkey(BLACK)
         self.rect = self.image.get_rect()
@@ -199,8 +188,6 @@ class Debris(pygame.sprite.Sprite):
 class Laser(pygame.sprite.Sprite):
     def __init__(self, x, y):  # the laser class has parameters for the x and y rect position
         pygame.sprite.Sprite.__init__(self)
-        # self.image = pygame.Surface((30, 10))
-        # self.image.fill(WHITE)
         self.image = pygame.image.load(laser_file).convert()
         self.image.set_colorkey(BLACK)
         self.rect = self.image.get_rect()
