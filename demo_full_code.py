@@ -2,260 +2,358 @@
  * Copyright (C) Mathstronauts. All rights reserved.
  * This information is confidential and proprietary to Mathstronauts and may not be used, modified, copied or distributed.
 """
-import pygame  # pygame library for graphics
-import requests  # library to extract APIs
-import json  # library to read JSON files
-from datetime import *
-import mathstropy
-
-# define some colours
-WHITE = (255, 255, 255)
-BLACK = (0, 0, 0)
-
-# define Earth weather text display variables:
-weather_var = {
-    "show_current_temp": "",
-    "show_current_temp_units": "",
-    "show_forecast": "",
-    "show_update_time": "",
-    "show_date": "",
-    "show_high": "",
-    "show_low": "",
-    "show_sunrise_time": "",
-    "show_sunset_time": "",
-    "show_uvi": "",
-    "show_pressure": "",
-    "show_humidity": "",
-    "show_windspeed": "",
-}
-
-# ====== API Data ========
-# user input city location
-textinput = mathstropy.TextInput(initial_string="Toronto", font_size=30)  # initial string will be our example city
-
-# API URLs
-API_KEY = "bc93af7ec21317a25fa7d755f7391e39"
-
-# One Call Weather API
-weather_URL = "https://api.openweathermap.org/data/2.5/onecall?"
-
-# Geocoding API
-geo_URL = "http://api.openweathermap.org/geo/1.0/direct?"
-
-def getLocation():
-    # get city location from user input
-    city_name = textinput.get_text()
-
-    # Extract Coordinates using Geocoding API
-    geo_parameters = {
-        "q": city_name,
-        "appid": API_KEY
-    }
-    geo_response = requests.get(geo_URL, params=geo_parameters)
-    print("Geocode API Status:", geo_response.status_code)
-    geo_coord = geo_response.json()
-    geo_first = geo_coord[0]  # get first item in list of possible cities (most popular)
-    lat = float(geo_first["lat"])  # north is positive, south is negative
-    lon = float(geo_first["lon"])  # east is positive, west is negative
-    return [lat, lon]
-
-def getWeather():
-    global background, backgroundRect, font_col
-    global weather_var
-
-    # get update time
-    update_time = datetime.now()  # get the current time
-    weather_var['show_update_time'] = mathstropy.time_format(update_time)
-
-    # get city location from user input
-    # latlon = textinput.get_text()
-    # lat = latlon.split(", ")[0]
-    # lon = latlon.split(", ")[1]
-    # print(lat, " ", lon)
-
-    # get location variables using getLocation() function
-    lat = getLocation()[0]
-    lon = getLocation()[1]
-
-    # Extract City Weather using One Call Weather API
-    weather_parameters = {
-      "lat": lat,
-      "lon": lon,
-      "appid": API_KEY,
-      "units": "metric"
-    }
-
-    weather_response = requests.get(weather_URL, params=weather_parameters)
-    print("One Call Weather API Status:", weather_response.status_code)
-    weather_data = weather_response.json()
-    current_weather = weather_data["current"]
-    mathstropy.jprint(current_weather)  # print the weather data being extracted from the API
-    daily_weather = (weather_data["daily"])[0]["temp"]
-
-    # calculate cloud base height
-    current_temp = round(current_weather["temp"])  # current temperature
-    current_forecast = (current_weather["weather"])[0]["main"]  # current weather forecast
-    dew_point = current_weather["dew_point"]  # current dew point temperature
-
-    if current_forecast != "Clear":
-        cloud_bh = round(mathstropy.cloud_base_height(current_temp, dew_point))
-    else:
-        cloud_bh = "- -"
-
-    # format date and time variables
-    weather_var['show_date'] = mathstropy.date_format(current_weather["dt"])
-    weather_var['show_sunrise_time'] = mathstropy.time_format(current_weather["sunrise"])
-    weather_var['show_sunset_time'] = mathstropy.time_format(current_weather["sunset"])
-
-    # text to display on app screen
-    weather_var['show_forecast'] = current_forecast  # current weather forecast
-    weather_var['show_current_temp'] = current_temp  # current temperature
-    weather_var['show_current_temp_units'] = chr(176) + "C"
-    weather_var['show_high'] = "High: " + str(round(daily_weather["max"], 1)) + chr(176)
-    weather_var['show_low'] = "Low: " + str(round(daily_weather["min"], 1)) + chr(176)
-
-    # text under Show More
-    weather_var['show_uvi'] = current_weather["uvi"]
-    weather_var['show_humidity'] = str(current_weather["humidity"]) + " %"
-    weather_var['show_pressure'] = str(current_weather["pressure"]) + " hPa"
-
-    # text in bottom left corner
-    weather_var['show_windspeed'] = str(round((current_weather["wind_speed"]) * 3.6)) + " km/h"
-    weather_var['show_cloud_bh'] = str(cloud_bh) + " m"
-
-    weather_var = mathstropy.dict_str(weather_var)  # convert all dictionary items to string
-
-# ======================== GRAPHICS ==========================
-# screen setup
-WIDTH = 800
-HEIGHT = 600
-FPS = 30
+"""
+ * Copyright (C) Mathstronauts. All rights reserved.
+ * This information is confidential and proprietary to Mathstronauts and may not be used, modified, copied or distributed.
+"""
+# Space Junk game part 2
+import pygame
+import random
 
 # initialize pygame
 pygame.init()
 
-# create window and clock
-screen = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("Earth Weather App")
+# SCREEN ------------------------------
+WIDTH = 1000
+HEIGHT = 600
+FPS = 30  # frames per second
 
-# Background Weather Image
-font_col = BLACK
-background_file = "images/bkgd_beach2.png"
-background = pygame.image.load(background_file)
-backgroundRect = background.get_rect()
+screen = pygame.display.set_mode((WIDTH,HEIGHT))
+pygame.display.set_caption("Space Junk")
 
-# Load Button Images and Rect Positions
-search_button = pygame.image.load("images/search_location_button.png")
-search_buttonRect = search_button.get_rect(topleft=(360,10))
-refresh_button = pygame.image.load("images/refresh_button.png")
-refresh_buttonRect = refresh_button.get_rect(topleft=(500,10))
-show_more_button = pygame.image.load("images/show_more_button.png")
-show_more_buttonRect = show_more_button.get_rect(topleft=(600, 125))
-hide_button = pygame.image.load("images/hide_button.png")
-hide_buttonRect = hide_button.get_rect(topleft=(565,130))
+# CLOCK -------------------------------
+clock = pygame.time.Clock()
 
-# Load Icon Images
-sunrise_i = pygame.image.load("images/sunrise_icon.png")
-sunset_i = pygame.image.load("images/sunset_icon.png")
-UVI_i = pygame.image.load("images/UVI_icon.png")
-pressure_i = pygame.image.load("images/pressure_icon.png")
-humidity_i = pygame.image.load("images/humidity_icon.png")
+# timer function
+start_time = 0
+elapse_time = 0
+TIME_LIMIT = 15
 
-# function to display text on screen
+def timer():
+    global start_time, elapse_time
+    current_time = pygame.time.get_ticks()
+    elapse_time = current_time - start_time
+
+# COUNTERS ----------------------------
+score = 0
+window = "gameplay"  # start, gameplay
+
+# GRAPHICS ----------------------------
+# define some colours
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
+RED = (255, 0, 0)
+GREEN = (0, 255, 0)
+BLUE = (0, 0, 255)
+YELLOW = (255, 255, 0)
+
+# create file paths
+background_file = "images/space_background.png"
+player_file = "images/player_ship.png"
+junk_file = "images/space_junk.png"
+satellite_file = "images/satellite_adv.png"
+debris_file = "images/space_debris2.png"
+laser_file = "images/laser_red.png"
+
+start_button_file = "images/start_button.png"
+replay_button_file = "images/play_again_button.png"
+
+# load background images
+background = pygame.image.load(background_file).convert()
+backgroundRect = background.get_rect(topleft=(0,0))  # if no position specified, default is topleft(0,0)
+
+# draw text function
 def display_text(size, text, colour, x, y):
     font = pygame.font.Font('freesansbold.ttf', size)  # specify the font and size
-    textSurf = font.render(text, True, colour)    # create a surface for the text object
+    textSurf = font.render(text, True, colour)  # create a surface for the text object
     textRect = textSurf.get_rect()  # get rect position of text on the screen
     textRect.topleft = (x, y)  # specify rect position of text on screen
     screen.blit(textSurf, textRect)  # show the text on the screen
 
-def showMore():
-    global weather_var
-    # create icon rects
-    sunrise_iRect = sunrise_i.get_rect(topleft=(565, 180))
-    sunset_iRect = sunset_i.get_rect(topleft=(565, 215))
-    UVI_iRect = UVI_i.get_rect(topleft=(565, 250))
-    pressure_iRect = pressure_i.get_rect(topleft=(565, 285))
-    humidity_iRect = humidity_i.get_rect(topleft=(565, 320))
+# draw text on screen
+def showTextBox():
+    global elapse_time
+    # player score
+    show_score = "Score: " + str(score)
+    display_text(25, show_score, BLACK, 550, 20)
+    # timer
+    time_passed = TIME_LIMIT - round(elapse_time / 1000)  # pygame gets time in milliseconds
+    show_time = "Time: " + str(time_passed)
+    display_text(25, show_time, BLACK, 800, 20)
 
-    # draw weather info text
-    mathstropy.display_text(16, f"Sunrise: {weather_var['show_sunrise_time']}", font_col, 600, 185)
-    mathstropy.display_text(16, f"Sunset: {weather_var['show_sunset_time']}", font_col, 600, 220)
-    mathstropy.display_text(16, f"UV Index: {weather_var['show_uvi']}", font_col, 600, 255)
-    mathstropy.display_text(16, f"Pressure: {weather_var['show_pressure']}", font_col, 600, 290)
-    mathstropy.display_text(16, f"Humidity: {weather_var['show_humidity']}", font_col, 600, 325)
+def showGameOver():
+    display_text(100, "GAME OVER", WHITE, 230, 250)
+    show_final_score = "Final Score: " + str(score)
+    display_text(30, show_final_score, WHITE, 400, 350)
+    pygame.display.flip()  # we need to update the display before waiting
 
-    # draw weather MORE info icons on screen
-    screen.blit(sunrise_i, sunrise_iRect)
-    screen.blit(sunset_i, sunset_iRect)
-    screen.blit(UVI_i, UVI_iRect)
-    screen.blit(pressure_i, pressure_iRect)
-    screen.blit(humidity_i, humidity_iRect)
+# SPRITES -----------------------------
+class Player(pygame.sprite.Sprite):
+    def __init__(self):
+        pygame.sprite.Sprite.__init__(self)  # inherit Sprite class
+        # self.image = pygame.Surface((50, 50)) # rectangle shape
+        # self.image.fill(GREEN)
+        self.image = pygame.image.load(player_file).convert()
+        self.image.set_colorkey(BLACK)  # cancel out transparent background
+        self.rect = self.image.get_rect()    # set rect dimentions
+        # RECT POSITION
+        self.rect.x = WIDTH - self.rect.width
+        self.rect.y = int(HEIGHT/2)
+        self.y_speed = 0  # start not moving
+    
+    def update(self):
+        # check if key pressed
+        keypressed = pygame.key.get_pressed()
+        if keypressed[pygame.K_UP]: 
+            self.y_speed = -10  # move up 10 pixels
+        elif keypressed[pygame.K_DOWN]:
+            self.y_speed = 10  # move down 10 pixels
+        else:
+            self.y_speed = 0   # don't move
 
-# App Conditions
-running = True  # this means that app will run while this variable is true
-show_more_click = False
+        # update position
+        self.rect.y += self.y_speed
 
-# get location and weather data when app launches
-getLocation()  # Get latitude and longitude for city location
-getWeather()  # Initialize weather data
+        # set boundaries for movement
+        if self.rect.top < 0:
+            self.rect.top = 0
+        elif self.rect.bottom > HEIGHT:
+            self.rect.bottom = HEIGHT
 
-# ====================== APP DISPLAY LOOP =========================
+    def fireLaser(self):
+        laser_x = self.rect.left  # the laser's x position is the player's x position
+        laser_y = self.rect.centery  # the laser's y poistion is the player's centery position
+        laser = Laser(laser_x, laser_y)
+        laser_sprites.add(laser)
+        all_sprites.add(laser)
+
+class Junk(pygame.sprite.Sprite):
+    def __init__(self):
+        pygame.sprite.Sprite.__init__(self)  # inherit Sprite class
+        # self.image = pygame.Surface((25, 25))
+        # self.image.fill(YELLOW)
+        self.image = pygame.image.load(junk_file).convert()
+        self.image.set_colorkey(BLACK)
+        self.rect = self.image.get_rect()
+        self.rect.x = random.randint(-500, -50)  # start off screen
+        self.rect.y = random.randint(0, HEIGHT - self.rect.height)
+        # self.x_speed = 8
+        self.x_speed = random.randint(10, 18)  # set a random speed
+
+    def reset(self):  # create a method to reset the sprite to a random position
+        self.rect.x = random.randint(-500, -50)  # start off screen
+        self.rect.y = random.randint(0, HEIGHT - self.rect.height)
+        # self.x_speed = random.randint(8, 18)  # set a random speed
+
+    def update(self):
+        # update position
+        self.rect.x += self.x_speed
+        if self.rect.left > WIDTH:
+            # self.rect.x = 0
+            self.reset()
+
+class Satellite(pygame.sprite.Sprite):
+    def __init__(self):
+        pygame.sprite.Sprite.__init__(self)
+        # self.image = pygame.Surface((100, 80))
+        # self.image.fill(BLUE)
+        self.image = pygame.image.load(satellite_file).convert()
+        self.image.set_colorkey(BLACK)
+        self.rect = self.image.get_rect()
+        self.rect.right = random.randint(-1000, -500)
+        self.rect.y = random.randint(0, HEIGHT - self.rect.height)
+        self.x_speed = 8
+    
+    def reset(self):
+        self.rect.right = random.randint(-1000, -50)
+        self.rect.y = random.randint(0, HEIGHT - self.rect.height)
+    
+    def update(self):
+        # update position
+        self.rect.x += self.x_speed
+        if self.rect.left > WIDTH:
+            self.reset()
+
+class Debris(pygame.sprite.Sprite):
+    def __init__(self):
+        pygame.sprite.Sprite.__init__(self)
+        # self.image = pygame.Surface((100, 80))
+        # self.image.fill(RED)
+        self.image = pygame.image.load(debris_file).convert()
+        self.image.set_colorkey(BLACK)
+        self.rect = self.image.get_rect()
+        self.rect.right = random.randint(-1000, -500)
+        self.rect.y = random.randint(0, HEIGHT - self.rect.height)
+        self.x_speed = 7
+    
+    def reset(self):
+        self.rect.right = random.randint(-1000, -50)
+        self.rect.y = random.randint(0, HEIGHT - self.rect.height)
+    
+    def update(self):
+        # update position
+        self.rect.x += self.x_speed
+        if self.rect.left > WIDTH:
+            self.reset()
+
+class Laser(pygame.sprite.Sprite):
+    def __init__(self, x, y):  # the laser class has parameters for the x and y rect position
+        pygame.sprite.Sprite.__init__(self)
+        # self.image = pygame.Surface((30, 10))
+        # self.image.fill(WHITE)
+        self.image = pygame.image.load(laser_file).convert()
+        self.image.set_colorkey(BLACK)
+        self.rect = self.image.get_rect()
+        self.rect.right = x
+        self.rect.centery = y
+        self.x_speed = -15  # negative because laser moving towards the left
+    
+    def update(self):
+        self.rect.x += self.x_speed
+        if self.rect.right < 0:  # if laser goes off screen
+            self.kill()  # remove sprite from all groups
+
+# SPRITE GROUPS ---------------------------
+all_sprites = pygame.sprite.Group()
+junk_sprites = pygame.sprite.Group()
+sat_sprites = pygame.sprite.Group()
+deb_sprites = pygame.sprite.Group()
+laser_sprites = pygame.sprite.Group()
+
+# INITIALIZE SPRITES ----------------------
+def init_sprites():
+    global player
+    player = Player()  # create an instance of the Player class
+    all_sprites.add(player)  # add the sprite to our group 
+
+    # create multiple junk sprites
+    for i in range(5):
+        junk = Junk()
+        junk_sprites.add(junk)
+        all_sprites.add(junk)
+
+    # create satellite sprites
+    for i in range(1):
+        satellite = Satellite()
+        sat_sprites.add(satellite)
+        all_sprites.add(satellite)
+
+    # create debris sprites
+    for i in range(1):
+        debris = Debris()
+        deb_sprites.add(debris)
+        all_sprites.add(debris)
+
+# remove sprites from all groups
+def clear_sprites():
+    global player
+    player.kill()
+    junk_sprites.empty()
+    sat_sprites.empty()
+    deb_sprites.empty()
+    laser_sprites.empty()
+    all_sprites.empty()
+
+# DETECT COLLISIONS -------------------
+# player collision functions
+def playerCollide():
+    global score
+    # check for collisions between player and junk sprite
+    collision_junk_list = pygame.sprite.spritecollide(player, junk_sprites, True)
+    for collision in collision_junk_list:
+        # print("collect junk!")
+        score += 1
+        junk = Junk()  # re-initialize junk
+        junk_sprites.add(junk)
+        all_sprites.add(junk)
+    
+    # check for collisions between player and satellite sprite
+    collision_sat_list = pygame.sprite.spritecollide(player, sat_sprites, True)
+    for collision in collision_sat_list:
+        # print("satellite down!")
+        score += -5
+        satellite = Satellite()
+        sat_sprites.add(satellite)
+        all_sprites.add(satellite)
+    
+    # check for collisions between player and debris sprite
+    collision_deb_list = pygame.sprite.spritecollide(player, deb_sprites, True)
+    for collision in collision_deb_list:
+        # print("debris collision!")
+        score += 5
+        debris = Debris()
+        deb_sprites.add(debris)
+        all_sprites.add(debris)
+
+# laser collision functions
+def laserCollide():
+    global score
+    # check for collisions between junk sprites and lasers
+    hit_junk_list = pygame.sprite.groupcollide(junk_sprites, laser_sprites, True, True)  # junk and bullet collide
+    for hit in hit_junk_list:
+        score += 5
+        junk = Junk()
+        junk_sprites.add(junk)
+        all_sprites.add(junk)
+
+    # check for collisions between satellite sprites and lasers
+    hit_sat_list = pygame.sprite.groupcollide(sat_sprites, laser_sprites, True, True)  # satellite and bullet
+    for hit in hit_sat_list:
+        score += -10
+        satellite = Satellite()
+        sat_sprites.add(satellite)
+        all_sprites.add(satellite)
+
+    # check for collisions between debris sprites and lasers
+    hit_deb_list = pygame.sprite.groupcollide(deb_sprites, laser_sprites, True, True)  # debris and bullet collide
+    for hit in hit_deb_list:
+        score += 10
+        debris = Debris()  # re-initialize debris sprite, since debris is global, we are "writing over" the previous object
+        deb_sprites.add(debris)
+        all_sprites.add(debris)
+
+init_sprites()
+start_time = pygame.time.get_ticks()  # get start time
+
+# GAME LOOP ---------------------------
+running = True
 while running:
-  # process user input
-  events = pygame.event.get()
-  for event in events:
-      mouse = pygame.mouse.get_pos()  # get mouse position (x, y)
+    # regulate the speed
+    clock.tick(FPS)
 
-      if event.type == pygame.QUIT:
-          running = False  # stop game and quite
+    # process user input
+    events = pygame.event.get()
+    for event in events:
+        mouse = pygame.mouse.get_pos() # get position of mouse cursor
+        if event.type == pygame.QUIT:  # if the X button is clicked
+            running = False
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_SPACE:
+                player.fireLaser()  # create laser sprite
 
-      if event.type == pygame.MOUSEBUTTONDOWN:
-          print("Mouse click!")
-          if pygame.Rect.collidepoint(refresh_buttonRect, mouse):  # if refresh button overlaps with mouse position
-              print("REFRESH!")
-              getWeather()
-          elif pygame.Rect.collidepoint(search_buttonRect, mouse): # if new city button overlaps with mouse position
-              print("NEW CITY")
-              getLocation()
-              getWeather()
-          elif pygame.Rect.collidepoint(show_more_buttonRect, mouse): # if more button overlaps with mouse position
-              print("SHOW MORE!!!")
-              show_more_click = True
-          elif pygame.Rect.collidepoint(hide_buttonRect, mouse):
-              print("HIDE MENU")
-              show_more_click = False
+    # draw background
+    screen.fill(BLACK)
+    screen.blit(background,backgroundRect)
+    showTextBox()
 
-  # render/draw the screen
-  screen.fill(BLACK)
-  screen.blit(background, backgroundRect)
+    # MAIN GAMEPLAY
+    if window == "gameplay":
+        # update the game
+        timer()  # start timer
+        all_sprites.update()
+        playerCollide()
+        laserCollide()
+        # draw sprites
+        all_sprites.draw(screen)
 
-  # draw buttons
-  screen.blit(refresh_button, refresh_buttonRect)
-  screen.blit(search_button, search_buttonRect)
-  screen.blit(show_more_button, show_more_buttonRect)
+    # GAMEOVER
+    if score < 0 or round(elapse_time/1000) == TIME_LIMIT:
+        # print gameover
+        showGameOver()
+        window = "gameover"
 
-  # display_text(size, text, colour, x, y)
-  mathstropy.display_text(150, weather_var['show_current_temp'], font_col, 40, 55)
-  mathstropy.display_text(40, weather_var['show_current_temp_units'], font_col, 205, 65)
-  mathstropy.display_text(25, weather_var['show_forecast'], font_col, 45, 200)
-  mathstropy.display_text(20, f"Last Updated: {weather_var['show_update_time']}", font_col, 550, 20)
-  mathstropy.display_text(60, weather_var['show_date'], font_col, 550, 55)
-  mathstropy.display_text(20, weather_var['show_high'], font_col, 80, 400)
-  mathstropy.display_text(20, weather_var['show_low'], font_col, 80, 460)
-  # bottom bar text
-  mathstropy.display_text(16, weather_var['show_windspeed'], BLACK, 70, 555)
-  mathstropy.display_text(16, weather_var['show_cloud_bh'], BLACK, 250, 555)
+    # update and draw game screen
+    pygame.display.flip()
 
-  # show text input box on screen
-  textinput.update(events)
-  screen.blit(textinput.get_surface(), (25, 20))
-
-  if show_more_click == True:
-      showMore()
-      screen.blit(hide_button, hide_buttonRect)
-
-  # display all objects on the screen
-  pygame.display.flip()
-
+# quit pygame window
 pygame.quit()
